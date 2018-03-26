@@ -1,24 +1,41 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 
+class App extends React.Component {
 
-class FileTable extends React.Component {
+    constructor() {
+        super();
+        this.state = {files: []};
+    }
+
+    componentDidMount() {
+        fetch(`http://localhost:8080/api/files`)
+            .then(result => result.json())
+            .then(files => this.setState({files}))
+    }
+
     render() {
-        var rows = [];
-        this.props.files.map((file) =>
-            rows.push(<File file={file}/>)
+        return (<FileList files={this.state.files}/>);
+    }
+};
+
+class FileList extends React.Component {
+    render() {
+        var files = this.props.files.map((file, i) =>
+            <File key={i} file={file}/>
         );
         return (
             <div className="container">
                 <table className="table table-striped">
                     <thead>
-                    <tr key={0}>
-                        <th>FileName</th>
-                        <th>Path</th>
-                        <th></th>
-                    </tr>
+                        <tr>
+                            <th>ID</th>
+                            <th>FileName</th>
+                            <th>Path</th>
+                            <th></th>
+                        </tr>
                     </thead>
-                    <tbody>{rows}</tbody>
+                    <tbody>{files}</tbody>
                 </table>
             </div>
         );
@@ -26,38 +43,16 @@ class FileTable extends React.Component {
 };
 
 class File extends React.Component {
-    constructor() {
-        super();
-        this.state = {
-            fileStatVisible: false
-        }
-    }
-
-    handleDetail() {
-        this.setState({fileStatVisible: !this.state.fileStatVisible});
-        {
-            this.state.fileStatVisible
-                ? <Child />
-                : null
-        }
-    }
-
     render() {
         return (
-
-                    <tr key={this.props.file.id} >
-                        <td> {this.props.file.name} {this.props.file.id}</td>
-                        <td> {this.props.file.path}</td>
-                        <td>
-                            <button className="btn btn-info" onClick={this.handleDetail}>Show detail</button>
-                        </td>
-                    </tr>
-                    /*{
-                        this.state.fileStatVisible
-                            ? <FileStatistic />
-                            : null
-                    }*/
-
+            <tr key={this.props.file.id}>
+                <td>{this.props.file.id}</td>
+                <td>{this.props.file.name}</td>
+                <td>{this.props.file.path}</td>
+                <td>
+                    <button className="btn btn-info">Show detail</button>
+                </td>
+            </tr>
         );
     }
 };
@@ -90,23 +85,7 @@ class FileStatistic extends React.Component {
     }
 };
 
-class App extends React.Component {
 
-    constructor() {
-        super();
-        this.state = {files: []};
-    }
-
-    componentDidMount() {
-        fetch(`http://localhost:8080/api/files`)
-            .then(result => result.json())
-            .then(files => this.setState({files}))
-    }
-
-    render() {
-        return (<FileTable files={this.state.files}/>);
-    }
-};
 
 ReactDOM.render(<App/>,
     document.getElementById('react')
