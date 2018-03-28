@@ -5,10 +5,7 @@ class App extends React.Component {
 
     constructor() {
         super();
-        this.showFileStatistic = this.showFileStatistic.bind(this);
-        this.hideFileStatistic = this.hideFileStatistic.bind(this);
         this.state = {files: []};
-        this.isShowFileStat = {isShowFileStat: false};
     }
 
     componentDidMount() {
@@ -20,35 +17,16 @@ class App extends React.Component {
             });
     }
 
-    showFileStatistic(id) {
-        this.setState({isShowFileStat: true});
-        this.setState({fileId: id})
-    }
-
-    hideFileStatistic() {
-        this.setState({isShowFileStat: false});
-    }
-
     render() {
         return (
             <div>
                 <span className="text-center ">
                     <h5>File Statistic</h5>
                 </span>
-                <div className="row">
-                    <div className="col-md-5">
-                        <FileList files={this.state.files}
-                                  show={this.showFileStatistic}
-                                  hide={this.hideFileStatistic}/>
-                    </div>
-                    <div className="col-md-5">
-                        {  this.state.isShowFileStat &&
-                        <FileStatistic fileId={this.state.fileId}/>
-                        }
-                    </div>
+                <div className="container col-md-12">
+                    <FileList files={this.state.files}/>
                 </div>
             </div>
-
         );
     }
 };
@@ -56,20 +34,16 @@ class App extends React.Component {
 class FileList extends React.Component {
     render() {
         var files = this.props.files.map((file, i) =>
-            <File key={i} file={file} show={this.props.show} hide={this.props.hide}/>
+            <File key={i} file={file}/>
         );
         return (
-            <table className="table table-bordered left">
-                <thead>
-                <tr>
-                    <th className="col-md-1">ID</th>
-                    <th className="col-md-2">FileName</th>
-                    <th className="col-md-3">Path</th>
-                    <th className="col-md-2"></th>
-                </tr>
-                </thead>
-                <tbody>{files}</tbody>
-            </table>
+            <div className="table table-bordered left">
+                <div className="btn btn-block row head">
+                    <div className="col-md-1"><b>ID</b></div>
+                    <div className="col-md-2"><b>FileName</b></div>
+                </div>
+                {files}
+            </div>
         );
     }
 };
@@ -77,33 +51,25 @@ class FileList extends React.Component {
 class File extends React.Component {
     constructor() {
         super();
-        this.clickHandler = this.clickHandler.bind(this);
+        /*this.clickHandler = this.clickHandler().bind(this);*/
         this.state = {isShowDetail: false};
-        this.state = {buttonName: "Show detail"};
     }
 
     clickHandler() {
         this.setState({isShowDetail: !this.state.isShowDetail});
-        if (this.state.isShowDetail) {
-            this.setState({buttonName: "Hide detail"});
-            this.props.show(this.props.file.id);
-        } else {
-            this.setState({buttonName: "Show detail"});
-            this.props.hide();
-        }
     };
 
     render() {
         return (
-            <tr key={this.props.file.id}>
-                <td>{this.props.file.id}</td>
-                <td>{this.props.file.name}</td>
-                <td>{this.props.file.path}</td>
-                <td>
-                    <button className="btn btn-info"
-                            onClick={this.clickHandler}>{this.state.buttonName}</button>
-                </td>
-            </tr>
+            <div>
+                <div className="btn btn-block row" onClick={this.clickHandler.bind(this)}>
+                    <div className="col-md-1">{this.props.file.id}</div>
+                    <div className="col-md-2">{this.props.file.name}</div>
+                </div>
+                {this.state.isShowDetail && <div className="container">
+                    <FileStatistic fileId={this.props.file.id}/>
+                </div>}
+            </div>
         );
     }
 };
@@ -111,7 +77,11 @@ class File extends React.Component {
 class FileStatistic extends React.Component {
     constructor() {
         super();
-        this.state = {fileStat: []};
+        this.clickHandler = this.clickHandler.bind(this);
+        this.state = {
+            fileStat: [],
+            buttonName: "Show line detail",
+            isShowLineDetail: false};
     }
 
     componentDidMount() {
@@ -121,40 +91,102 @@ class FileStatistic extends React.Component {
             .catch((err) => {
                 console.error('err', err);
             });
-
     }
+
+    clickHandler() {
+        this.setState({isShowLineDetail: !this.state.isShowLineDetail});
+        this.setState({buttonName: this.state.isShowLineDetail
+                ? "Show line detail"
+                : "Hide line detail"
+            });
+    };
 
     eachItem(item, i) {
         return (
             <tr key={item.id}>
-                <th>{item.longestWord}</th>
-                <th>{item.shortestWord}</th>
-                <th>{item.linesLength}</th>
-                <th>{item.averageWordLength}</th>
+                <td>{item.longestWord}</td>
+                <td>{item.shortestWord}</td>
+                <td>{item.linesLength}</td>
+                <td>{item.averageWordLength}</td>
+                <td>
+                    <button className="btn btn-info"
+                            onClick={this.clickHandler.bind(this)}>{this.state.buttonName}</button>
+                </td>
             </tr>
         );
     }
 
     render() {
         return (
-            <table className="table table-bordered right">
+            <div>
+                <table className="table table-bordered">
+                    <thead>
+                    <tr>
+                        <th>Longest Word</th>
+                        <th>Shortest Word</th>
+                        <th>Lines Length</th>
+                        <th>Average Word Length</th>
+                        <th>Show Line Detail</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {this.state.fileStat.map(this.eachItem.bind(this))}
+                    </tbody>
+                </table>
+                <br/>
+                {this.state.isShowLineDetail && <div className="container">
+                    <FileLineStatistic fileId={this.props.fileId}/>
+                </div>}
+            </div>
+        );
+    }
+};
+
+class FileLineStatistic extends React.Component {
+    constructor() {
+        super();
+        this.state = {lineStat: []};
+    }
+
+    componentDidMount() {
+        fetch(`/api/files/` + this.props.fileId + '/lines_stat')
+            .then(result => result.json())
+            .then(lineStat => this.setState({lineStat}))
+            .catch((err) => {
+                console.error('err', err);
+            });
+    }
+
+    eachItem(item, i) {
+        return (
+            <tr key={item.id}>
+                <td>{item.lineNumber}</td>
+                <td>{item.longestWord}</td>
+                <td>{item.shortestWord}</td>
+                <td>{item.lineLength}</td>
+                <td>{item.averageWordLength}</td>
+            </tr>
+        );
+    }
+
+    render() {
+        return (
+            <table className="table table-bordered">
                 <thead>
                 <tr>
-                    <th>LongestWord</th>
-                    <th>ShortestWord</th>
-                    <th>LinesLength</th>
-                    <th>AverageWordLength</th>
+                    <th>Line Number</th>
+                    <th>Longest Word</th>
+                    <th>Shortest Word</th>
+                    <th>Line Length</th>
+                    <th>Average Word Length</th>
                 </tr>
                 </thead>
                 <tbody>
-                {this.state.fileStat.map(this.eachItem)}
+                {this.state.lineStat.map(this.eachItem)}
                 </tbody>
             </table>
         );
     }
 };
 
-
-ReactDOM.render(<App/>,
-    document.getElementById('react')
-);
+ReactDOM.render(<App/>, document.getElementById('react'));
