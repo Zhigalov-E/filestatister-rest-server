@@ -5,7 +5,11 @@ class App extends React.Component {
 
     constructor() {
         super();
-        this.state = {files: []};
+        this.state = {
+            files: [],
+            filterText: ''
+        };
+        this.handleFilterTextChange = this.handleFilterTextChange.bind(this);
     }
 
     componentDidMount() {
@@ -17,25 +21,60 @@ class App extends React.Component {
             });
     }
 
+    handleFilterTextChange(filterText) {
+        this.setState({
+            filterText: filterText
+        });
+    }
+
     render() {
         return (
             <div>
                 <span className="text-center ">
                     <h5>File Statistic</h5>
                 </span>
+                <div className="container">
+                    <br/>
+                    <SearchBar filterText={this.state.filterText} onFilterTextChange={this.handleFilterTextChange}/>
+                    <br/>
+                </div>
                 <div className="container col-md-12">
-                    <FileList files={this.state.files}/>
+                    <FileList files={this.state.files} filterText={this.state.filterText}/>
                 </div>
             </div>
         );
     }
 };
 
+class SearchBar extends React.Component {
+    constructor(props) {
+        super(props);
+        this.handleFilterTextChange = this.handleFilterTextChange.bind(this);
+    }
+
+    handleFilterTextChange(e) {
+        this.props.onFilterTextChange(e.target.value);
+    }
+
+    render() {
+        return (
+            <form>
+                <input type="text" placeholder="Search..."
+                       value={this.props.filterText}
+                       onChange={this.handleFilterTextChange}/>
+            </form>
+        );
+    }
+}
+
 class FileList extends React.Component {
     render() {
-        var files = this.props.files.map((file, i) =>
-            <File key={i} file={file}/>
-        );
+        const filterText = this.props.filterText;
+        var files = this.props.files
+            .filter((file) => {
+                return !(file.name.toLowerCase().indexOf(filterText.toLowerCase()) === -1);
+            }
+            ).map((file, i) => <File key={i} file={file}/>);
         return (
             <div className="table table-bordered left">
                 <div className="btn btn-block row head">
