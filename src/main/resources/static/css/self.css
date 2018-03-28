@@ -1,0 +1,9 @@
+table.left {
+    float:left;
+    width:45%;
+}
+
+table.right   {
+    width:45%;
+    float:right;
+}​
